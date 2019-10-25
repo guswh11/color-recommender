@@ -1,0 +1,2 @@
+include ':app', ':object-detection', ':tensorflow-lite'
+rootProject.name='color-recommender'
