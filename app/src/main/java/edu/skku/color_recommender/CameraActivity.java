@@ -40,8 +40,10 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -79,6 +81,8 @@ public abstract class CameraActivity extends AppCompatActivity
   private int yRowStride;
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
+  private FrameLayout container;
+  private Toolbar toolbar;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -87,9 +91,15 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.activity_camera);
-    Toolbar toolbar = findViewById(R.id.toolbar);
+
+    toolbar = findViewById(R.id.toolbar);
+    container = findViewById(R.id.container);
+
+
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+
 
     if (hasPermission()) {
       setFragment();
@@ -264,6 +274,17 @@ public abstract class CameraActivity extends AppCompatActivity
     super.onDestroy();
   }
 
+  /*
+  @Override
+  public void onWindowFocusChanged(boolean hasFocus) {
+    super.onWindowFocusChanged(hasFocus);
+    FrameLayout.LayoutParams container_params = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, container.getHeight());
+    container_params.height = 200;
+
+    container.setLayoutParams(container_params);
+  }
+*/
   protected synchronized void runInBackground(final Runnable r) {
     if (handler != null) {
       handler.post(r);
@@ -378,7 +399,7 @@ public abstract class CameraActivity extends AppCompatActivity
           new LegacyCameraConnectionFragment(this, getLayoutId(), getDesiredPreviewFrameSize());
     }
 
-    getFragmentManager().beginTransaction().replace(org.tensorflow.lite.examples.detection.R.id.container, fragment).commit();
+    getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
   }
 
   protected void fillBytes(final Plane[] planes, final byte[][] yuvBytes) {
