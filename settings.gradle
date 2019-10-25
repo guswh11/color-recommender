@@ -1,2 +1,2 @@
-include ':app', ':object-detection', ':tensorflow-lite'
+include ':app', ':object-detection', ':tensorflow-lite', ':opencv'
 rootProject.name='color-recommender'
