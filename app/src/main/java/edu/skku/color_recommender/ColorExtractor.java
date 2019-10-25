@@ -2,9 +2,12 @@ package edu.skku.color_recommender;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.net.Uri;
+import android.graphics.Bitmap;
+import android.util.Log;
 
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
@@ -18,9 +21,17 @@ public class ColorExtractor {
     private Context context;
     private ArrayList<ArrayList<Integer>> samples;
     private ArrayList<String> labels;
+    private ImgDrawer imgDrawer;
 
-    public ColorExtractor(Context context) {
+    private final static float CROP_PORTION = 0.9f;
+
+    public interface ImgDrawer {
+        void imgShow(Mat mat);
+    }
+
+    public ColorExtractor(Context context, ImgDrawer imgDrawer) {
         this.context = context;
+        this.imgDrawer = imgDrawer;
         loadColorMatrix();
     }
 
@@ -61,9 +72,10 @@ public class ColorExtractor {
         }
     }
 
-    public ArrayList<Color> extractColor(Uri uri) {
-        ArrayList<Color> colorCandidates = new ArrayList();
-        Mat img = Imgcodecs.imread(uri.toString(), Imgcodecs.IMREAD_COLOR);
+    public ArrayList<Color> extractColor(Bitmap bitmap) {
+        ArrayList<Color> colorCandidates;
+        Mat img = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
+        Utils.bitmapToMat(bitmap, img);
         img = resize(img);
 
         // Detect obstruction(background and skin) and remove it
@@ -81,7 +93,19 @@ public class ColorExtractor {
     }
 
     private Mat resize(Mat img) {
-        Mat resized = new Mat();
+        Mat resized;
+        int cropRows, cropCols;
+        int rowStart, rowEnd, colStart, colEnd;
+
+        cropRows = (int) (img.rows() * CROP_PORTION);
+        cropCols = (int) (img.cols() * CROP_PORTION);
+
+        rowStart = (img.rows() - cropRows) / 2;
+        rowEnd = rowStart + cropRows;
+        colStart = (img.cols() - cropCols) / 2;
+        colEnd = colStart + cropCols;
+
+        resized = img.submat(rowStart, rowEnd, colStart, colEnd);
         return resized;
     }
 
