@@ -80,24 +80,14 @@ public abstract class CameraActivity extends AppCompatActivity
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
 
-  private LinearLayout bottomSheetLayout;
-  private LinearLayout gestureLayout;
-  private BottomSheetBehavior sheetBehavior;
-
-  protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
-  protected ImageView bottomSheetArrowImageView;
-  private ImageView plusImageView, minusImageView;
-  private SwitchCompat apiSwitchCompat;
-  private TextView threadsTextView;
-
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
     super.onCreate(null);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    setContentView(org.tensorflow.lite.examples.detection.R.layout.activity_camera);
-    Toolbar toolbar = findViewById(org.tensorflow.lite.examples.detection.R.id.toolbar);
+    setContentView(R.layout.activity_camera);
+    Toolbar toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -106,71 +96,6 @@ public abstract class CameraActivity extends AppCompatActivity
     } else {
       requestPermission();
     }
-
-    threadsTextView = findViewById(org.tensorflow.lite.examples.detection.R.id.threads);
-    plusImageView = findViewById(org.tensorflow.lite.examples.detection.R.id.plus);
-    minusImageView = findViewById(org.tensorflow.lite.examples.detection.R.id.minus);
-    apiSwitchCompat = findViewById(org.tensorflow.lite.examples.detection.R.id.api_info_switch);
-    bottomSheetLayout = findViewById(org.tensorflow.lite.examples.detection.R.id.bottom_sheet_layout);
-    gestureLayout = findViewById(org.tensorflow.lite.examples.detection.R.id.gesture_layout);
-    sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
-    bottomSheetArrowImageView = findViewById(org.tensorflow.lite.examples.detection.R.id.bottom_sheet_arrow);
-
-    ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
-    vto.addOnGlobalLayoutListener(
-        new ViewTreeObserver.OnGlobalLayoutListener() {
-          @Override
-          public void onGlobalLayout() {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-              gestureLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-            } else {
-              gestureLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-            //                int width = bottomSheetLayout.getMeasuredWidth();
-            int height = gestureLayout.getMeasuredHeight();
-
-            sheetBehavior.setPeekHeight(height);
-          }
-        });
-    sheetBehavior.setHideable(false);
-
-    sheetBehavior.setBottomSheetCallback(
-        new BottomSheetBehavior.BottomSheetCallback() {
-          @Override
-          public void onStateChanged(@NonNull View bottomSheet, int newState) {
-            switch (newState) {
-              case BottomSheetBehavior.STATE_HIDDEN:
-                break;
-              case BottomSheetBehavior.STATE_EXPANDED:
-                {
-                  bottomSheetArrowImageView.setImageResource(org.tensorflow.lite.examples.detection.R.drawable.icn_chevron_down);
-                }
-                break;
-              case BottomSheetBehavior.STATE_COLLAPSED:
-                {
-                  bottomSheetArrowImageView.setImageResource(org.tensorflow.lite.examples.detection.R.drawable.icn_chevron_up);
-                }
-                break;
-              case BottomSheetBehavior.STATE_DRAGGING:
-                break;
-              case BottomSheetBehavior.STATE_SETTLING:
-                bottomSheetArrowImageView.setImageResource(org.tensorflow.lite.examples.detection.R.drawable.icn_chevron_up);
-                break;
-            }
-          }
-
-          @Override
-          public void onSlide(@NonNull View bottomSheet, float slideOffset) {}
-        });
-
-    frameValueTextView = findViewById(org.tensorflow.lite.examples.detection.R.id.frame_info);
-    cropValueTextView = findViewById(org.tensorflow.lite.examples.detection.R.id.crop_info);
-    inferenceTimeTextView = findViewById(org.tensorflow.lite.examples.detection.R.id.inference_info);
-
-    apiSwitchCompat.setOnCheckedChangeListener(this);
-
-    plusImageView.setOnClickListener(this);
-    minusImageView.setOnClickListener(this);
   }
 
   protected int[] getRgbBytes() {
@@ -494,42 +419,11 @@ public abstract class CameraActivity extends AppCompatActivity
 
   @Override
   public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-    setUseNNAPI(isChecked);
-    if (isChecked) apiSwitchCompat.setText("NNAPI");
-    else apiSwitchCompat.setText("TFLITE");
   }
 
   @Override
   public void onClick(View v) {
-    if (v.getId() == org.tensorflow.lite.examples.detection.R.id.plus) {
-      String threads = threadsTextView.getText().toString().trim();
-      int numThreads = Integer.parseInt(threads);
-      if (numThreads >= 9) return;
-      numThreads++;
-      threadsTextView.setText(String.valueOf(numThreads));
-      setNumThreads(numThreads);
-    } else if (v.getId() == org.tensorflow.lite.examples.detection.R.id.minus) {
-      String threads = threadsTextView.getText().toString().trim();
-      int numThreads = Integer.parseInt(threads);
-      if (numThreads == 1) {
-        return;
-      }
-      numThreads--;
-      threadsTextView.setText(String.valueOf(numThreads));
-      setNumThreads(numThreads);
-    }
-  }
 
-  protected void showFrameInfo(String frameInfo) {
-    frameValueTextView.setText(frameInfo);
-  }
-
-  protected void showCropInfo(String cropInfo) {
-    cropValueTextView.setText(cropInfo);
-  }
-
-  protected void showInference(String inferenceTime) {
-    inferenceTimeTextView.setText(inferenceTime);
   }
 
   protected abstract void processImage();
@@ -539,8 +433,4 @@ public abstract class CameraActivity extends AppCompatActivity
   protected abstract int getLayoutId();
 
   protected abstract Size getDesiredPreviewFrameSize();
-
-  protected abstract void setNumThreads(int numThreads);
-
-  protected abstract void setUseNNAPI(boolean isChecked);
 }
