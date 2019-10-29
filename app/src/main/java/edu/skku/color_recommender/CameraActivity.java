@@ -19,7 +19,9 @@ package edu.skku.color_recommender;
 import android.Manifest;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -29,11 +31,14 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
+import android.provider.MediaStore;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -41,6 +46,7 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -48,6 +54,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
@@ -57,6 +64,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 
 public abstract class CameraActivity extends AppCompatActivity
@@ -81,8 +91,19 @@ public abstract class CameraActivity extends AppCompatActivity
   private int yRowStride;
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
+
   private FrameLayout container;
   private Toolbar toolbar;
+  private ImageButton albumBtn;
+
+  private Uri mImageCaptureUri;
+  private ImageView userIv;
+  private int viewId;
+  private String absolutePath;
+
+  private static final int PICK_FROM_ALBUM = 0;
+  private static final int PICK_FROM_CAMERA = 1;
+  private static final int CROP_IMAGE = 2;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -94,23 +115,106 @@ public abstract class CameraActivity extends AppCompatActivity
 
     toolbar = findViewById(R.id.toolbar);
     container = findViewById(R.id.container);
-
+    albumBtn = findViewById(R.id.btn_album);
+    userIv = findViewById(R.id.iv_user);
 
     setSupportActionBar(toolbar);
     getSupportActionBar().setDisplayShowTitleEnabled(false);
-
-
 
     if (hasPermission()) {
       setFragment();
     } else {
       requestPermission();
     }
+
+    albumBtn.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        takeAlbumAction();
+      }
+    });
   }
 
   protected int[] getRgbBytes() {
     imageConverter.run();
     return rgbBytes;
+  }
+
+  private void takeAlbumAction(){
+    Intent intent = new Intent(Intent.ACTION_PICK);
+    intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
+    startActivityForResult(intent, PICK_FROM_ALBUM);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if(resultCode != RESULT_OK)
+      return;
+
+    switch(requestCode){
+      case PICK_FROM_ALBUM:
+        mImageCaptureUri = data.getData();
+
+      case PICK_FROM_CAMERA:
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(mImageCaptureUri, "image/*");
+
+        intent.putExtra("outputX", 200);
+        intent.putExtra("outputY", 200);
+        intent.putExtra("aspectX",1);
+        intent.putExtra("aspectY",1);
+        intent.putExtra("scale", true);
+        intent.putExtra("return-data", true);
+        startActivityForResult(intent, CROP_IMAGE);
+        break;
+
+      case CROP_IMAGE:
+        final Bundle extras = data.getExtras();
+
+        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+
+                "/color-recommender/"+System.currentTimeMillis()+".jpg";
+        if(extras!=null){
+          Bitmap photo = extras.getParcelable("data");
+          userIv.setImageBitmap(photo);
+
+          storeCropImage(photo, filePath);
+          absolutePath = filePath;
+          break;
+        }
+
+        File f = new File(mImageCaptureUri.getPath());
+        if(f.exists())
+          f.delete();
+
+        break;
+    }
+  }
+
+  private void storeCropImage(Bitmap bitmap, String filePath){
+    String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath()
+            +"/color-recommender";
+    File directory_color = new File(dirPath);
+    if(!directory_color.exists())
+      directory_color.mkdir();
+
+    File copyFile = new File(filePath);
+    BufferedOutputStream out = null;
+
+    try{
+      copyFile.createNewFile();
+      out = new BufferedOutputStream(new FileOutputStream((copyFile)));
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+      sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+              Uri.fromFile(copyFile)));
+
+      out.flush();
+      out.close();
+    }catch(Exception e){
+      e.printStackTrace();
+    }
   }
 
   protected int getLuminanceStride() {

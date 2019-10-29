@@ -43,7 +43,7 @@
             android:orientation="horizontal">
 
             <ImageButton
-                android:id="@+id/imageButton"
+                android:id="@+id/btn_album"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -58,12 +58,13 @@
                 android:layout_weight="1"
                 android:text="Button" />
 
-            <Button
-                android:id="@+id/button6"
+            <ImageView
+                android:id="@+id/iv_user"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Button" />
+                app:srcCompat="@android:color/background_light" />
+
         </LinearLayout>
 
         <FrameLayout
