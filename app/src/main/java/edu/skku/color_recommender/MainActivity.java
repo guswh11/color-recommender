@@ -472,68 +472,10 @@ public class MainActivity extends AppCompatActivity {
         switch(requestCode){
             case PICK_FROM_ALBUM:
                 mImageCaptureUri = data.getData();
-
-                Intent intent = new Intent("com.android.camera.action.CROP");
-                intent.setDataAndType(mImageCaptureUri, "image/*");
-
-                intent.putExtra("outputX", 200);
-                intent.putExtra("outputY", 200);
-                intent.putExtra("aspectX",1);
-                intent.putExtra("aspectY",1);
-                intent.putExtra("scale", true);
-                intent.putExtra("return-data", true);
-                startActivityForResult(intent, CROP_IMAGE);
+                Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+                intent.putExtra("imageUri", mImageCaptureUri);
+                startActivity(intent);
                 break;
-
-            case CROP_IMAGE:
-                final Bundle extras = data.getExtras();
-
-                String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+
-                        "/color-recommender/"+System.currentTimeMillis()+".jpg";
-                if(extras!=null){
-                    Bitmap photo = extras.getParcelable("data");
-                    //userIv.setImageBitmap(photo);
-
-                    storeCropImage(photo, filePath);
-                    break;
-                }
-
-                File f = new File(mImageCaptureUri.getPath());
-                if(f.exists())
-                    f.delete();
-
-                break;
-        }
-    }
-
-    private void storeCropImage(Bitmap bitmap, String filePath){
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath()
-                +"/color-recommender";
-        Uri fileUri;
-        File directory_color = new File(dirPath);
-        if(!directory_color.exists())
-            directory_color.mkdir();
-
-        File copyFile = new File(filePath);
-        BufferedOutputStream out = null;
-
-        try{
-            copyFile.createNewFile();
-            out = new BufferedOutputStream(new FileOutputStream((copyFile)));
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
-            fileUri = Uri.fromFile(copyFile);
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                    fileUri));
-
-            out.flush();
-            out.close();
-
-            Intent intent = new Intent(MainActivity.this, DetectActivity.class);
-            intent.putExtra("imageUri", fileUri);
-            startActivity(intent);
-        }catch(Exception e){
-            e.printStackTrace();
         }
     }
 /*
