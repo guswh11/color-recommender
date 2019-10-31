@@ -63,6 +63,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PICK_FROM_ALBUM = 0;
@@ -93,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
     private Uri mImageCaptureUri;
     private int viewId;
     private String absolutePath;
+
+    private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
@@ -167,11 +170,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
+                mCameraOpenCloseLock.release();
                 initCameraAndPreview();
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
+                mCameraOpenCloseLock.release();
                 if (mCameraDevice != null) {
                     mCameraDevice.close();
                     mCameraDevice = null;
@@ -180,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+                mCameraOpenCloseLock.release();
             }
         });
     }
