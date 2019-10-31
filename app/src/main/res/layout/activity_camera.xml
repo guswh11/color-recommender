@@ -68,7 +68,7 @@
             </LinearLayout>
 
             <ImageView
-                android:id="@+id/btn_take_pic"
+                android:id="@+id/btn_capture"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"

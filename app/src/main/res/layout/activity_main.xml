@@ -52,12 +52,13 @@
                     android:text="앨범" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/btn_take_pic"
+            <ImageButton
+                android:id="@+id/btn_capture"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:background="@android:color/transparent"
                 app:srcCompat="@drawable/ic_take_picture" />
 
             <ImageView
@@ -69,13 +70,12 @@
 
         </LinearLayout>
 
-        <FrameLayout
-            android:id="@+id/container"
+        <SurfaceView
+            android:id="@+id/cameraView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="@dimen/bottom_menu_height">
-
-        </FrameLayout>
+        </SurfaceView>
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
