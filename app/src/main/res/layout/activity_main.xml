@@ -85,9 +85,11 @@
             android:background="@color/semi_transparent">
 
             <ImageView
-                android:layout_width="wrap_content"
+                android:layout_width="150dp"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/tfl_logo" />
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:srcCompat="@drawable/ic_app" />
         </androidx.appcompat.widget.Toolbar>
 
     </RelativeLayout>
