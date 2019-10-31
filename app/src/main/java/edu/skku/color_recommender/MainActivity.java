@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,9 +30,11 @@ import android.media.ImageReader;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,12 +50,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
 import org.tensorflow.lite.examples.detection.env.Logger;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -82,6 +89,10 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager mSensorManager;
     private DeviceOrientation deviceOrientation;
     int mDSI_height, mDSI_width;
+
+    private Uri mImageCaptureUri;
+    private int viewId;
+    private String absolutePath;
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
@@ -121,7 +132,15 @@ public class MainActivity extends AppCompatActivity {
                 takePicture();
             }
         });
+
+        albumBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                takeAlbumAction();
+            }
+        });
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -431,6 +450,83 @@ public class MainActivity extends AppCompatActivity {
     private void updateTextureViewSize(int viewWidth, int viewHeight) {
         Log.d("@@@", "TextureView Width : " + viewWidth + " TextureView Height : " + viewHeight);
         cameraView.setLayoutParams(new RelativeLayout.LayoutParams(viewWidth, viewHeight));
+    }
+
+    private void takeAlbumAction(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
+        startActivityForResult(intent, PICK_FROM_ALBUM);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(resultCode != RESULT_OK)
+            return;
+
+        switch(requestCode){
+            case PICK_FROM_ALBUM:
+                mImageCaptureUri = data.getData();
+
+            case PICK_FROM_CAMERA:
+                Intent intent = new Intent("com.android.camera.action.CROP");
+                intent.setDataAndType(mImageCaptureUri, "image/*");
+
+                intent.putExtra("outputX", 200);
+                intent.putExtra("outputY", 200);
+                intent.putExtra("aspectX",1);
+                intent.putExtra("aspectY",1);
+                intent.putExtra("scale", true);
+                intent.putExtra("return-data", true);
+                startActivityForResult(intent, CROP_IMAGE);
+                break;
+
+            case CROP_IMAGE:
+                final Bundle extras = data.getExtras();
+
+                String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+
+                        "/color-recommender/"+System.currentTimeMillis()+".jpg";
+                if(extras!=null){
+                    Bitmap photo = extras.getParcelable("data");
+                    //userIv.setImageBitmap(photo);
+
+                    storeCropImage(photo, filePath);
+                    absolutePath = filePath;
+                    break;
+                }
+
+                File f = new File(mImageCaptureUri.getPath());
+                if(f.exists())
+                    f.delete();
+
+                break;
+        }
+    }
+
+    private void storeCropImage(Bitmap bitmap, String filePath){
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath()
+                +"/color-recommender";
+        File directory_color = new File(dirPath);
+        if(!directory_color.exists())
+            directory_color.mkdir();
+
+        File copyFile = new File(filePath);
+        BufferedOutputStream out = null;
+
+        try{
+            copyFile.createNewFile();
+            out = new BufferedOutputStream(new FileOutputStream((copyFile)));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                    Uri.fromFile(copyFile)));
+
+            out.flush();
+            out.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 /*
     @Override
