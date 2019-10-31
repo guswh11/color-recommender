@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
      * that is inserted manually gets saved at the end of the gallery (because date is not populated).
      * @see android.provider.MediaStore.Images.Media#insertImage(ContentResolver, Bitmap, String, String)
      */
-    public static final String insertImage(ContentResolver cr,
+    public static final Uri insertImage(ContentResolver cr,
                                            Bitmap source,
                                            String title,
                                            String description) {
@@ -403,17 +403,21 @@ public class MainActivity extends AppCompatActivity {
             stringUrl = url.toString();
         }
 
-        return stringUrl;
+        return url;
     }
 
 
     private class SaveImageTask extends AsyncTask<Bitmap, Void, Void> {
+        Uri fileUri;
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
 
             Toast.makeText(MainActivity.this, "사진을 저장하였습니다.", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+            intent.putExtra("imageUri", fileUri);
+            startActivity(intent);
         }
 
         @Override
@@ -425,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            insertImage(getContentResolver(), bitmap, ""+System.currentTimeMillis(), "");
+            fileUri = insertImage(getContentResolver(), bitmap, ""+System.currentTimeMillis(), "");
 
             return null;
         }
@@ -469,7 +473,6 @@ public class MainActivity extends AppCompatActivity {
             case PICK_FROM_ALBUM:
                 mImageCaptureUri = data.getData();
 
-            case PICK_FROM_CAMERA:
                 Intent intent = new Intent("com.android.camera.action.CROP");
                 intent.setDataAndType(mImageCaptureUri, "image/*");
 
@@ -492,7 +495,6 @@ public class MainActivity extends AppCompatActivity {
                     //userIv.setImageBitmap(photo);
 
                     storeCropImage(photo, filePath);
-                    absolutePath = filePath;
                     break;
                 }
 
@@ -507,6 +509,7 @@ public class MainActivity extends AppCompatActivity {
     private void storeCropImage(Bitmap bitmap, String filePath){
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath()
                 +"/color-recommender";
+        Uri fileUri;
         File directory_color = new File(dirPath);
         if(!directory_color.exists())
             directory_color.mkdir();
@@ -519,11 +522,16 @@ public class MainActivity extends AppCompatActivity {
             out = new BufferedOutputStream(new FileOutputStream((copyFile)));
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
 
+            fileUri = Uri.fromFile(copyFile);
             sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                    Uri.fromFile(copyFile)));
+                    fileUri));
 
             out.flush();
             out.close();
+
+            Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+            intent.putExtra("imageUri", fileUri);
+            startActivity(intent);
         }catch(Exception e){
             e.printStackTrace();
         }
