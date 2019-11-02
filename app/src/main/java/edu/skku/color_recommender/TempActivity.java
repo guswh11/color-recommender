@@ -53,6 +53,9 @@ public class TempActivity extends AppCompatActivity {
     private int mRotation;
     private OrientationChangeCallback mOrientationChangeCallback;
 
+    private ImageView pictureView;
+    private Uri fileUri;
+
     private class ImageAvailableListener implements ImageReader.OnImageAvailableListener {
         @Override
         public void onImageAvailable(ImageReader imageReader) {
@@ -149,6 +152,10 @@ public class TempActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_temp);
+
+        fileUri = getIntent().getParcelableExtra("imageUri");
+        pictureView = findViewById(R.id.pictureView);
+        pictureView.setImageURI(fileUri);
 
         mProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
