@@ -35,6 +35,7 @@
             android:name=".DetectorActivity"
             android:label="@string/activity_name_detection"
             android:screenOrientation="portrait" />
+        <activity android:name=".TempActivity"/>
     </application>
 
 </manifest>

@@ -420,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(aVoid);
 
             Toast.makeText(MainActivity.this, "사진을 저장하였습니다.", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+            Intent intent = new Intent(MainActivity.this, TempActivity.class);
             intent.putExtra("imageUri", fileUri);
             startActivity(intent);
         }
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
         switch(requestCode){
             case PICK_FROM_ALBUM:
                 mImageCaptureUri = data.getData();
-                Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+                Intent intent = new Intent(MainActivity.this, TempActivity.class);
                 intent.putExtra("imageUri", mImageCaptureUri);
                 startActivity(intent);
                 break;
