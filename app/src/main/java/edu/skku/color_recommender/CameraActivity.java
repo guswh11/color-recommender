@@ -39,6 +39,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -250,6 +251,8 @@ public abstract class CameraActivity extends AppCompatActivity
     isProcessingFrame = true;
     yuvBytes[0] = bytes;
     yRowStride = previewWidth;
+    Log.d("image_byte",new Integer(bytes.length).toString());
+    Log.d("image_byte_size", new Integer(ImageUtils.getYUVByteSize(previewWidth, previewHeight)).toString());
 
     imageConverter =
         new Runnable() {

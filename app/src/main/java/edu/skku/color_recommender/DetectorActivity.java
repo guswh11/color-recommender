@@ -222,7 +222,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
   @Override
   protected int getLayoutId() {
-    return org.tensorflow.lite.examples.detection.R.layout.camera_connection_fragment_tracking;
+    return R.layout.camera_connection_fragment_tracking;
   }
 
   @Override

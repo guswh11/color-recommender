@@ -65,7 +65,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     private static final int PICK_FROM_ALBUM = 0;
     private static final int PICK_FROM_CAMERA = 1;
     private static final int CROP_IMAGE = 2;
@@ -344,6 +344,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void unlockFocus() {
         try {
+            mCameraOpenCloseLock.release();
             // Reset the auto-focus trigger
             mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
@@ -411,7 +412,6 @@ public class MainActivity extends AppCompatActivity {
         return url;
     }
 
-
     private class SaveImageTask extends AsyncTask<Bitmap, Void, Void> {
         Uri fileUri;
 
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
         switch(requestCode){
             case PICK_FROM_ALBUM:
                 mImageCaptureUri = data.getData();
-                Intent intent = new Intent(MainActivity.this, TempActivity.class);
+                Intent intent = new Intent(MainActivity.this, DetectorActivity.class);
                 intent.putExtra("imageUri", mImageCaptureUri);
                 startActivity(intent);
                 break;
