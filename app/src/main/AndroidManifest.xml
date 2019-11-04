@@ -20,7 +20,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:allowBackup,android:icon,android:roundIcon">
-        <activity android:name=".DetectActivity"></activity>
+        <activity android:name=".ResultActivity"></activity>
+        <activity android:name=".DetectActivity" />
         <activity android:name=".LaunchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,12 +31,12 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".DetectorActivity"
             android:label="@string/activity_name_detection"
             android:screenOrientation="portrait" />
-        <activity android:name=".TempActivity"/>
+        <activity android:name=".TempActivity" />
     </application>
 
 </manifest>
