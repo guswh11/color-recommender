@@ -1,32 +1,19 @@
 package edu.skku.color_recommender;
 
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.hardware.display.DisplayManager;
-import android.hardware.display.VirtualDisplay;
-import android.media.Image;
-import android.media.ImageReader;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.SystemClock;
-import android.os.Trace;
 import android.provider.MediaStore;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
@@ -123,28 +110,73 @@ public class TempActivity extends AppCompatActivity{
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
 
-        onPreviewSizeChosen(new Size(mWidth, mHeight), 90);
-        byte[] dest;
-        Bitmap bitmap;
+        onPreviewSizeChosen(new Size(mWidth, mHeight), 0);
+        Bitmap bitmap = null;
         int[] mIntArr = new int[mWidth * mHeight];
         rgbBytes = new int[previewWidth * previewHeight];
         try {
             bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), fileUri);
             bitmap.getPixels(mIntArr, 0, mWidth, 0, 0, mWidth, mHeight);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        dest = encodeYUV420SP(mIntArr, mWidth, mHeight);
-        imageConverter =
+        Matrix cropTransform =
+                ImageUtils.getTransformationMatrix(
+                        previewWidth, previewHeight,
+                        TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
+                        sensorOrientation, MAINTAIN_ASPECT);
+
+        final Canvas canvas = new Canvas(croppedBitmap);
+        canvas.drawBitmap(bitmap, cropTransform, null);
+        // For examining the actual TF input.
+        if (SAVE_PREVIEW_BITMAP) {
+            ImageUtils.saveBitmap(croppedBitmap);
+        }
+
+        final long currTimestamp = timestamp;
+        runInBackground(
                 new Runnable() {
                     @Override
                     public void run() {
-                        ImageUtils.convertYUV420SPToARGB8888(dest, mWidth, mHeight, rgbBytes);
+                        final long startTime = SystemClock.uptimeMillis();
+                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+
+                        cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                        final Canvas canvas = new Canvas(cropCopyBitmap);
+                        final Paint paint = new Paint();
+                        paint.setColor(Color.RED);
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2.0f);
+
+                        float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                        switch (MODE) {
+                            case TF_OD_API:
+                                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                                break;
+                        }
+
+                        final List<Classifier.Recognition> mappedRecognitions =
+                                new LinkedList<Classifier.Recognition>();
+
+                        for (final Classifier.Recognition result : results) {
+                            final RectF location = result.getLocation();
+                            if (location != null && result.getConfidence() >= minimumConfidence) {
+                                canvas.drawRect(location, paint);
+
+                                cropToFrameTransform.mapRect(location);
+
+                                result.setLocation(location);
+                                mappedRecognitions.add(result);
+                            }
+                        }
+
+                        tracker.trackResults(mappedRecognitions, currTimestamp);
+                        trackingOverlay.postInvalidate();
+
+                        computingDetection = false;
                     }
-                };
-        processImage();
+                });
     }
 
 
@@ -186,7 +218,7 @@ public class TempActivity extends AppCompatActivity{
     private static final DetectorMode MODE = DetectorMode.TF_OD_API;
     // Minimum detection confidence to track a detection.
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
-    private static final boolean MAINTAIN_ASPECT = false;
+    private static final boolean MAINTAIN_ASPECT = true;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
     private static final boolean SAVE_PREVIEW_BITMAP = false;
     private static final float TEXT_SIZE_DIP = 10;
@@ -275,67 +307,6 @@ public class TempActivity extends AppCompatActivity{
 
         tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
 
-    }
-
-    protected void processImage() {
-        Log.d("image","processing");
-        ++timestamp;
-        final long currTimestamp = timestamp;
-        //trackingOverlay.postInvalidate();
-
-        rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
-
-        final Canvas canvas = new Canvas(croppedBitmap);
-        canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-        // For examining the actual TF input.
-        if (SAVE_PREVIEW_BITMAP) {
-            ImageUtils.saveBitmap(croppedBitmap);
-        }
-
-        runInBackground(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        LOGGER.i("Running detection on image " + currTimestamp);
-                        final long startTime = SystemClock.uptimeMillis();
-                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-                        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
-                        cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                        final Canvas canvas = new Canvas(cropCopyBitmap);
-                        final Paint paint = new Paint();
-                        paint.setColor(Color.RED);
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2.0f);
-
-                        float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                        switch (MODE) {
-                            case TF_OD_API:
-                                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                                break;
-                        }
-
-                        final List<Classifier.Recognition> mappedRecognitions =
-                                new LinkedList<Classifier.Recognition>();
-
-                        for (final Classifier.Recognition result : results) {
-                            final RectF location = result.getLocation();
-                            if (location != null && result.getConfidence() >= minimumConfidence) {
-                                canvas.drawRect(location, paint);
-
-                                cropToFrameTransform.mapRect(location);
-
-                                result.setLocation(location);
-                                mappedRecognitions.add(result);
-                            }
-                        }
-
-                        tracker.trackResults(mappedRecognitions, currTimestamp);
-                        trackingOverlay.postInvalidate();
-
-                        computingDetection = false;
-                    }
-                });
     }
 
     protected int getLayoutId() {
