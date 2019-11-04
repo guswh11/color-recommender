@@ -32,6 +32,8 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Surface;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -50,6 +52,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TempActivity extends AppCompatActivity{
+    private Button resultBtn;
+
     private int mWidth;
     private int mHeight;
 
@@ -114,6 +118,8 @@ public class TempActivity extends AppCompatActivity{
         pictureView = findViewById(R.id.pictureView);
         pictureView.setImageURI(fileUri);
 
+        resultBtn = findViewById(R.id.result_btn);
+
         Display display = this.getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -145,6 +151,14 @@ public class TempActivity extends AppCompatActivity{
                     }
                 };
         processImage();
+
+        resultBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(TempActivity.this, ResultActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
 
