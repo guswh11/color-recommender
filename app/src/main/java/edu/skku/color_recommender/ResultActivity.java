@@ -19,6 +19,6 @@ public class ResultActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         tabLayout = findViewById(R.id.tabLayout);
 
-        tabLayout.setupWithViewPager(viewPager, true); 
+        tabLayout.setupWithViewPager(viewPager, true);
     }
 }
