@@ -108,7 +108,6 @@ public class TempActivity extends AppCompatActivity{
         @Override
         public void onImageAvailable(ImageReader imageReader) {
             try {
-                    int rowPadding = rowStride - pixelStride * mWidth;
                 // Initialize the storage bitmaps once when the resolution is known.
                 if (rgbBytes == null) {
                     previewHeight = mHeight;
@@ -150,13 +149,6 @@ public class TempActivity extends AppCompatActivity{
                 bitmap = Bitmap.createBitmap(mWidth + rowPadding / pixelStride, mHeight, Bitmap.Config.ARGB_8888);
                 bitmap.copyPixelsFromBuffer(buffer);
 
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
- /*
-                byte[] dest = new byte[buffer.remaining()];
-                buffer.get(dest);
-
-  */
                 int[] mIntArr = new int[mWidth * mHeight];
                 bitmap.getPixels(mIntArr, 0, mWidth, 0, 0, mWidth, mHeight);
                 final byte[] dest = encodeYUV420SP(mIntArr, mWidth, mHeight);
