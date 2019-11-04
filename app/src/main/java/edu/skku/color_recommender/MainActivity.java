@@ -176,9 +176,10 @@ public class MainActivity extends AppCompatActivity{
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                mCameraOpenCloseLock.release();
                 if (mCameraDevice != null) {
                     mCameraDevice.close();
+
+                    mCameraOpenCloseLock.release();
                     mCameraDevice = null;
                 }
             }
@@ -272,7 +273,6 @@ public class MainActivity extends AppCompatActivity{
             mSession = session;
 
             try {
-
                 mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                 mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
                 mSession.setRepeatingRequest(mPreviewBuilder.build(), null, mHandler);
@@ -291,7 +291,9 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             mSession = session;
-            unlockFocus();
+            if(mCameraDevice!=null){
+                unlockFocus();
+            }
         }
 
         @Override
@@ -344,7 +346,6 @@ public class MainActivity extends AppCompatActivity{
      */
     private void unlockFocus() {
         try {
-            mCameraOpenCloseLock.release();
             // Reset the auto-focus trigger
             mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                     CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
