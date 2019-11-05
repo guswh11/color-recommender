@@ -1,7 +1,5 @@
 package edu.skku.color_recommender;
 
-import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.util.Log;
@@ -16,9 +14,6 @@ import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Stack;
@@ -28,11 +23,6 @@ import static org.opencv.imgproc.Imgproc.COLOR_RGB2Lab;
 import static org.opencv.imgproc.Imgproc.COLOR_RGBA2RGB;
 
 public class ColorExtractor {
-
-    private Context context;
-    private ArrayList<ArrayList<Integer>> samples;
-    private ArrayList<String> labels;
-    private ImgDrawer imgDrawer;
 
     private final static float CROP_PORTION = 0.9f;     // Portion of remaining image after crop
     private final static float RESIZE_PORTION = 0.05f;  // Portion of remaining image after resize
@@ -44,52 +34,7 @@ public class ColorExtractor {
     private final static int TRUE = 255;                // Match true value to White(0xFFFFFF)
     private final static int FALSE = 0;                 // Match false value to Black(0x000000)
 
-    public interface ImgDrawer {
-        void imgShow(Mat mat);
-        void imgShow(float r, float g, float b);
-    }
-
-    public ColorExtractor(Context context, ImgDrawer imgDrawer) {
-        this.context = context;
-        this.imgDrawer = imgDrawer;
-        loadColorMatrix();
-    }
-
-    public void loadColorMatrix() {
-
-        samples = new ArrayList<>();
-        labels = new ArrayList<>();
-
-        AssetManager am = context.getAssets();
-        try {
-            InputStream is = am.open("sample.txt");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line = reader.readLine();
-            while(line != null) {
-                ArrayList sample = new ArrayList();
-                line = line.substring(1, line.length()-1);
-                line = line.trim().replaceAll(" +", " ");
-                sample.add(new Integer(line.split(" ")[0]));
-                sample.add(new Integer(line.split(" ")[1]));
-                sample.add(new Integer(line.split(" ")[2]));
-                samples.add(sample);
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            InputStream is = am.open("label.txt");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line = reader.readLine();
-            while(line != null) {
-                labels.add(line);
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public ColorExtractor() {
     }
 
     public ArrayList<Color> extractColor(Bitmap bitmap) {
@@ -309,11 +254,6 @@ public class ColorExtractor {
             colors.add(Color.valueOf(Color.rgb(r, g, b)));
         }
         Collections.reverse(colors);
-
-        for (int i = 0; i < colors.size(); i++) {
-            Log.d("COLOR_EXTRACT", "" + colors.get(i));
-        }
-        imgDrawer.imgShow(colors.get(0).red(), colors.get(0).green(), colors.get(0).blue());
 
         return colors;
     }
