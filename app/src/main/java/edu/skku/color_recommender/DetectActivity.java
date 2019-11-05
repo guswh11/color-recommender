@@ -8,7 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -19,7 +18,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
@@ -65,22 +63,20 @@ public class DetectActivity extends AppCompatActivity{
         setContentView(R.layout.activity_temp);
 
         fileUri = getIntent().getParcelableExtra("imageUri");
+
         pictureView = findViewById(R.id.pictureView);
-        //pictureView.setImageURI(fileUri);
+        pictureView.setImageURI(fileUri);
 
         resultBtn = findViewById(R.id.result_btn);
 
-        Display display = this.getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        mWidth = 640;
-        mHeight = 480;
+        mWidth = DESIRED_PREVIEW_SIZE.getWidth();
+        mHeight = DESIRED_PREVIEW_SIZE.getHeight();
+
         handlerThread = new HandlerThread("inference");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
 
         Bitmap bitmap = null;
-        int[] mIntArr = new int[mWidth * mHeight];
         rgbBytes = new int[previewWidth * previewHeight];
 
         /*
@@ -95,7 +91,6 @@ public class DetectActivity extends AppCompatActivity{
         bitmap = resize(this, fileUri, 800);
         mWidth = resizedWidth;
         mHeight = resizedHeight;
-
 
         onPreviewSizeChosen(new Size(mWidth, mHeight), 0);
 
@@ -157,8 +152,6 @@ public class DetectActivity extends AppCompatActivity{
                         computingDetection = false;
                     }
                 });
-
-        pictureView.setImageBitmap(bitmap);
 
         resultBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -305,13 +298,13 @@ public class DetectActivity extends AppCompatActivity{
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         try {
-            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options); // 1번
+            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
 
             int width = options.outWidth;
             int height = options.outHeight;
             int samplesize = 1;
 
-            while (true) {//2번
+            while (true) {
                 if (width / 2 < resize || height / 2 < resize)
                     break;
                 width /= 2;
@@ -320,7 +313,7 @@ public class DetectActivity extends AppCompatActivity{
             }
 
             options.inSampleSize = samplesize;
-            Bitmap bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options); //3번
+            Bitmap bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options);
             resizeBitmap = bitmap;
 
             resizedWidth = width;
