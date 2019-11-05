@@ -7,14 +7,39 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+
 import java.util.ArrayList;
 
 public class ResultActivity extends AppCompatActivity {
+
+    private ColorExtractor ce;
+
     ViewPager viewPager;
     TabLayout tabLayout;
     ResultAdapter resultAdapter;
 
     ArrayList<ResultItemFragment> resultFragment = new ArrayList<>();
+
+    static {
+        System.loadLibrary("opencv_java3");
+    }
+
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                    // ce.extractColor(bitmap);
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +48,8 @@ public class ResultActivity extends AppCompatActivity {
 
         viewPager = findViewById(R.id.viewPager);
         tabLayout = findViewById(R.id.tabLayout);
+
+        ce = new ColorExtractor();
 
         //set margin
         viewPager.setClipToPadding(false);
@@ -44,5 +71,15 @@ public class ResultActivity extends AppCompatActivity {
         viewPager.setAdapter(resultAdapter);
 
         tabLayout.setupWithViewPager(viewPager, true);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!OpenCVLoader.initDebug()) {
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, this, mLoaderCallback);
+        } else {
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
     }
 }
