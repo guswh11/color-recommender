@@ -30,7 +30,6 @@ import android.media.ImageReader;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import androidx.annotation.NonNull;
@@ -48,18 +47,11 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 
-import org.tensorflow.lite.examples.detection.env.Logger;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -420,7 +412,7 @@ public class MainActivity extends AppCompatActivity{
             super.onPostExecute(aVoid);
 
             Toast.makeText(MainActivity.this, "사진을 저장하였습니다.", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(MainActivity.this, TempActivity.class);
+            Intent intent = new Intent(MainActivity.this, DetectActivity.class);
             intent.putExtra("imageUri", fileUri);
             startActivity(intent);
         }
@@ -477,7 +469,7 @@ public class MainActivity extends AppCompatActivity{
         switch(requestCode){
             case PICK_FROM_ALBUM:
                 mImageCaptureUri = data.getData();
-                Intent intent = new Intent(MainActivity.this, DetectorActivity.class);
+                Intent intent = new Intent(MainActivity.this, DetectActivity.class);
                 intent.putExtra("imageUri", mImageCaptureUri);
                 startActivity(intent);
                 break;
