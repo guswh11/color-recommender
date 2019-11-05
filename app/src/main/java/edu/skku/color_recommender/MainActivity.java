@@ -206,9 +206,9 @@ public class MainActivity extends AppCompatActivity{
             Size largestPreviewSize = map.getOutputSizes(ImageFormat.JPEG)[0];
             Log.i("LargestSize", largestPreviewSize.getWidth() + " " + largestPreviewSize.getHeight());
 
-            setAspectRatioTextureView(largestPreviewSize.getHeight(),largestPreviewSize.getWidth());
+            setAspectRatioTextureView(640, 480);
 
-            mImageReader = ImageReader.newInstance(largestPreviewSize.getWidth(), largestPreviewSize.getHeight(), ImageFormat.JPEG,/*maxImages*/7);
+            mImageReader = ImageReader.newInstance(640, 480, ImageFormat.JPEG,/*maxImages*/7);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mainHandler);
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 return;

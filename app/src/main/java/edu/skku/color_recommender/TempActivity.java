@@ -1,6 +1,8 @@
 package edu.skku.color_recommender;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -32,6 +34,7 @@ import org.tensorflow.lite.examples.detection.tflite.Classifier;
 import org.tensorflow.lite.examples.detection.tflite.TFLiteObjectDetectionAPIModel;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +42,8 @@ import java.util.List;
 public class TempActivity extends AppCompatActivity{
     private int mWidth;
     private int mHeight;
+    private int resizedWidth;
+    private int resizedHeight;
 
     private ImageView pictureView;
     private Uri fileUri;
@@ -57,7 +62,7 @@ public class TempActivity extends AppCompatActivity{
 
         fileUri = getIntent().getParcelableExtra("imageUri");
         pictureView = findViewById(R.id.pictureView);
-        pictureView.setImageURI(fileUri);
+        //pictureView.setImageURI(fileUri);
 
         Display display = this.getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -68,10 +73,11 @@ public class TempActivity extends AppCompatActivity{
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
 
-        onPreviewSizeChosen(new Size(mWidth, mHeight), 0);
         Bitmap bitmap = null;
         int[] mIntArr = new int[mWidth * mHeight];
         rgbBytes = new int[previewWidth * previewHeight];
+
+        /*
         try {
             bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), fileUri);
             bitmap.getPixels(mIntArr, 0, mWidth, 0, 0, mWidth, mHeight);
@@ -79,14 +85,29 @@ public class TempActivity extends AppCompatActivity{
             e.printStackTrace();
         }
 
+         */
+
+
+        bitmap = resize(this, fileUri, 800);
+        mWidth = resizedWidth;
+        mHeight = resizedHeight;
+
+        onPreviewSizeChosen(new Size(mWidth, mHeight), 0);
+
         Matrix cropTransform =
                 ImageUtils.getTransformationMatrix(
                         previewWidth, previewHeight,
                         TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
                         sensorOrientation, MAINTAIN_ASPECT);
 
+        //cropTransform 조건에 맞춰 bitmap 잘라서 croppedBitmap에 넣음
         final Canvas canvas = new Canvas(croppedBitmap);
         canvas.drawBitmap(bitmap, cropTransform, null);
+
+        //이미지 확인
+        Bitmap temp_bitmap = croppedBitmap.copy(croppedBitmap.getConfig(), true);
+        pictureView.setImageBitmap(bitmap);
+
         // For examining the actual TF input.
         if (SAVE_PREVIEW_BITMAP) {
             ImageUtils.saveBitmap(croppedBitmap);
@@ -266,6 +287,38 @@ public class TempActivity extends AppCompatActivity{
     // checkpoints.
     private enum DetectorMode {
         TF_OD_API;
+    }
+
+    private Bitmap resize(Context context, Uri uri, int resize) {
+        Bitmap resizeBitmap = null;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        try {
+            BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options); // 1번
+
+            int width = options.outWidth;
+            int height = options.outHeight;
+            int samplesize = 1;
+
+            while (true) {//2번
+                if (width / 2 < resize || height / 2 < resize)
+                    break;
+                width /= 2;
+                height /= 2;
+                samplesize *= 2;
+            }
+
+            options.inSampleSize = samplesize;
+            Bitmap bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri), null, options); //3번
+            resizeBitmap = bitmap;
+
+            resizedWidth = width;
+            resizedHeight = height;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return resizeBitmap;
     }
 }
 
