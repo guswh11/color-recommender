@@ -34,7 +34,57 @@ public class ColorExtractor {
     private final static int TRUE = 255;                // Match true value to White(0xFFFFFF)
     private final static int FALSE = 0;                 // Match false value to Black(0x000000)
 
+    public enum ReferenceColor {
+
+        WHITE("white", Color.valueOf(Color.rgb(255, 255, 255))),
+        BEIGE("beige", Color.valueOf(Color.rgb(231, 218, 205))),
+        GREY("grey", Color.valueOf(Color.rgb(166, 179, 189))),
+        SKY_BLUE("sky blue", Color.valueOf(Color.rgb(192, 219, 215))),
+        PINK("pink", Color.valueOf(Color.rgb(246, 190, 201))),
+        YELLOW("yellow", Color.valueOf(Color.rgb(228, 213, 112))),
+        ORANGE("orange", Color.valueOf(Color.rgb(252, 119, 84))),
+        BLACK("black", Color.valueOf(Color.rgb(0, 0, 0))),
+        BROWN("brown", Color.valueOf(Color.rgb(82, 35, 24))),
+        NAVY("navy", Color.valueOf(Color.rgb(35, 21, 77))),
+        GREEN("green", Color.valueOf(Color.rgb(41, 64, 44))),
+        RED("red", Color.valueOf(Color.rgb(160, 39, 39))),
+        PURPLE("purple", Color.valueOf(Color.rgb(66, 36, 87))),;
+
+        private String name;
+        private Color color;
+
+        ReferenceColor(String name, Color color) {
+            this.name = name;
+            this.color = color;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Color getColor() {
+            return color;
+        }
+    }
+
     public ColorExtractor() {
+    }
+
+    public String getColorName(Color color) {
+        String name = new String();
+        double minDistance = 1234567890.0;
+
+        for (ReferenceColor refColor: ReferenceColor.values()) {
+            double distance = Math.pow(refColor.getColor().red() - color.red(), 2)
+                    + Math.pow(refColor.getColor().green() - color.green(), 2)
+                    + Math.pow(refColor.getColor().blue() - color.blue(), 2);
+            if (distance < minDistance) {
+                minDistance = distance;
+                name = refColor.getName();
+            }
+        }
+
+        return name;
     }
 
     public ArrayList<Color> extractColor(Bitmap bitmap) {
