@@ -8,8 +8,8 @@ android {
     }
     defaultConfig {
         applicationId "edu.skku.color_recommender"
-        minSdkVersion 28
-        targetSdkVersion 28
+        minSdkVersion 26
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
