@@ -354,8 +354,7 @@ public class MainActivity extends AppCompatActivity{
             mSession.capture(mPreviewBuilder.build(), mSessionCaptureCallback,
                     mHandler);
             // After this, the camera will go back to the normal state of preview.
-            mSession.setRepeatingRequest(mPreviewBuilder.build(), mSessionCaptureCallback,
-                    mHandler);
+            //mSession.setRepeatingRequest(mPreviewBuilder.build(), mSessionCaptureCallback, mHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
