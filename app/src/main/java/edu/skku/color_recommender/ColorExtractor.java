@@ -249,12 +249,9 @@ public class ColorExtractor {
             for (int j = 0; j < imgCopy.cols(); j++) {
                 for (Pair corner: corners) {
                     double norm = Math.sqrt(
-                            Math.pow(Math.abs(
-                                    imgCopy.get(i, j)[0] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[0]), 2)
-                            + Math.pow(Math.abs(
-                                    imgCopy.get(i, j)[1] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[1]), 2)
-                            + Math.pow(Math.abs(
-                                    imgCopy.get(i, j)[2] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[2]), 2)
+                            Math.pow(imgCopy.get(i, j)[0] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[0], 2)
+                            + Math.pow(imgCopy.get(i, j)[1] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[1], 2)
+                            + Math.pow(imgCopy.get(i, j)[2] - imgCopy.get((Integer) corner.first, (Integer) corner.second)[2], 2)
                     );
 
                     if (norm < COLOR_MAX_DISTANCE) {
