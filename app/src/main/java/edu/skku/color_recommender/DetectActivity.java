@@ -62,7 +62,7 @@ public class DetectActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_temp);
+        setContentView(R.layout.activity_detect);
 
         fileUri = getIntent().getParcelableExtra("imageUri");
         pictureView = findViewById(R.id.pictureView);

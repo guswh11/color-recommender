@@ -62,7 +62,7 @@ public class ResultActivity extends AppCompatActivity {
         viewPager.setPadding(margin, 0, margin, 0);
         viewPager.setPageMargin(margin/2);
 
-        for(int i=0;i<4;i++){
+        for(int i=0;i<1;i++){
             ResultItemFragment item = new ResultItemFragment();
             resultFragment.add(item);
         }
